@@ -830,7 +830,7 @@ function updateMiniHearts() {
         const proximityFade = distToHeart > 0
             ? Math.min(distToHeart / FADE_ZONE, 1)
             : 0; // fully gone above heart
-        if (h.y < 0) h.life -= 0.08;
+        if (h.y < -30) h.life -= 0.08;
         if (h.life <= 0) { miniHearts.splice(i, 1); continue; }
 
         const s = h.size;
