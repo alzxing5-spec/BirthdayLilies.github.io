@@ -807,15 +807,15 @@ const MINI_HEART_COUNT    = 18;  // 🔧 max alive at once
 function spawnMiniHeart() {
     if (miniHearts.length >= MINI_HEART_COUNT) return;
     miniHearts.push({
-        x:     CX + (Math.random() - 0.5) * canvas.width * 0.7,
-        y:     canvas.height + 10,
-        vx:    (Math.random() - 0.5) * 0.7,
-        vy:    -(0.5 + Math.random() * 1.0),
-        size:  3 + Math.random() * 6,        // 🔧 heart size range
-        alpha: 0.5 + Math.random() * 0.4,
-        hue:   320 + Math.random() * 30,
-        wobble: Math.random() * Math.PI * 2,
-        life:  1,
+        x:         CX + (Math.random() - 0.5) * canvas.width * 0.7,
+        y:         canvas.height + 10,
+        vx:        (Math.random() - 0.5) * 0.7,
+        vy:        -(0.5 + Math.random() * 1.0),
+        size:      3 + Math.random() * 6,   // 🔧 heart size range
+        baseAlpha: 0.5 + Math.random() * 0.4, // fixed base, scaled by proximity
+        hue:       320 + Math.random() * 30,
+        wobble:    Math.random() * Math.PI * 2,
+        life:      1,
     });
 }
 
@@ -824,15 +824,18 @@ function updateMiniHearts() {
         const h = miniHearts[i];
         h.x    += h.vx + Math.sin(windTime * 1.1 + h.wobble) * 0.35;
         h.y    += h.vy;
-        // fade out as they approach the main heart area
-        const distToCX = Math.abs(h.x - CX);
-        const distToCY = Math.abs(h.y - CY);
-        if (h.y < CY - 80 || h.y < 0) h.life -= 0.04;
+        // fade out as they approach the heart center
+        const FADE_ZONE     = CY * 0.55; // 🔧 fraction of screen height — fade zone above heart
+        const distToHeart   = CY - h.y;  // positive = below heart, negative = above
+        const proximityFade = distToHeart > 0
+            ? Math.min(distToHeart / FADE_ZONE, 1)
+            : 0; // fully gone above heart
+        if (h.y < 0) h.life -= 0.08;
         if (h.life <= 0) { miniHearts.splice(i, 1); continue; }
 
         const s = h.size;
         ctx.save();
-        ctx.globalAlpha = h.alpha * h.life;
+        ctx.globalAlpha = h.baseAlpha * proximityFade * h.life;
         ctx.shadowBlur  = 8;
         ctx.shadowColor = `hsl(${h.hue}, 85%, 65%)`;
         ctx.fillStyle   = `hsl(${h.hue}, 85%, 70%)`;
